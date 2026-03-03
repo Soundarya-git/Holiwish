@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graceful Floral Holi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #010206; /* Deep midnight */
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        #wish-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(4rem, 15vw, 9rem);
+            margin: 0;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 2s cubic-bezier(0.19, 1, 0.22, 1);
+            
+            /* Vibrant Shifting Gradient */
+            background: linear-gradient(90deg, #00d2ff, #facc15, #ff00ff, #7a2ff7, #00d2ff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: flow 3s linear infinite;
+            filter: drop-shadow(0 0 20px rgba(0, 210, 255, 0.3));
+        }
+        @keyframes flow {
+            to { background-position: 200% center; }
+        }
+        .flower-emoji {
+            font-size: clamp(2rem, 8vw, 5rem);
+            opacity: 0;
+            transition: all 2.5s ease-out;
+        }
+        .show {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="wish-container">
+        <div class="flower-emoji" id="f1">🌸</div>
+        <h1 id="wish">Happy Holi</h1>
+        <div class="flower-emoji" id="f2">🌼</div>
+    </div>
+    
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const wish = document.getElementById('wish');
+        const f1 = document.getElementById('f1');
+        const f2 = document.getElementById('f2');
+
+        let particles = [];
+        // Blue-dominant vibrant palette
+        const colors = ['#0ea5e9', '#38bdf8', '#facc15', '#e879f9', '#a855f7'];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class PowderGrain {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 10 + 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.friction = 0.95;
+                this.gravity = 0.12;
+                this.opacity = 1;
+                this.decay = Math.random() * 0.015 + 0.01;
+                this.size = Math.random() * 20 + 10;
+            }
+
+            update() {
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.opacity -= this.decay;
+                this.size += 0.2;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
+                g.addColorStop(0, this.color);
+                g.addColorStop(1, 'transparent');
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function createPop(x, y) {
+            const c = colors[Math.floor(Math.random() * colors.length)];
+            for (let i = 0; i < 45; i++) {
+                particles.push(new PowderGrain(x, y, c));
+            }
+        }
+
+        // Automatic pops
+        function auto() {
+            createPop(Math.random() * canvas.width, Math.random() * canvas.height * 0.8);
+            setTimeout(auto, Math.random() * 1000 + 500);
+        }
+
+        // Trigger entrance
+        setTimeout(() => {
+            wish.classList.add('show');
+            f1.classList.add('show');
+            f2.classList.add('show');
+        }, 500);
+
+        window.addEventListener('mousedown', (e) => createPop(e.clientX, e.clientY));
+
+        function animate() {
+            ctx.fillStyle = 'rgba(1, 2, 6, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, i) => {
+                p.update();
+                p.draw();
+                if (p.opacity <= 0) particles.splice(i, 1);
+            });
+            requestAnimationFrame(animate);
+        }
+
+        auto();
+        animate();
+    </script>
+</body>
+</html>
